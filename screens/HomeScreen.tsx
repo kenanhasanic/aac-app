@@ -14,6 +14,7 @@ import DropdownComponent from '../components/Dropdown';
 import CardStream from '../components/CardStream';
 import Icon from 'react-native-vector-icons/Entypo';
 import {AiGeneratedPhrase} from '../functions/AiGeneratedPhrase';
+import TextToSpeech from '../components/TextToSpeech';
 
 interface Card {
   id: number;
@@ -32,7 +33,7 @@ export default function HomeScreen({navigation}: any) {
 
   const [streamClickedIcons, setStreamClickedIcons] = useState<Card[]>([]);
 
-  const [inputString, setInputString] = useState('');
+  const [inputString, setInputString] = useState('Volim jesti gliste');
 
   const [response, setResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -83,19 +84,6 @@ export default function HomeScreen({navigation}: any) {
           alignItems: 'center',
           justifyContent: 'flex-start',
         }}>
-        <View style={{flexDirection: 'row'}}>
-          <Icon name="add-user" size={30} color="#900" />
-          <DropdownComponent setGridSize={setGridSize}></DropdownComponent>
-          <DropdownComponent setGridSize={setGridSize}></DropdownComponent>
-        </View>
-        <View>
-          <Button title="Generate AI Response" onPress={handlePress} />
-          {loading ? (
-            <Text style={{color: 'black'}}>Loading...</Text>
-          ) : (
-            <Text style={{color: 'black'}}>Response: {response}</Text>
-          )}
-        </View>
         <View>
           <CardStream
             data={{
@@ -132,6 +120,31 @@ export default function HomeScreen({navigation}: any) {
               key={Number(gridSize)}
               numColumns={Number(gridSize)} // Use index as key
             />
+          )}
+        </View>
+
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+          <View style={{flex: 1}}>
+            <Icon name="controller-play" size={30} color="#900" />
+          </View>
+          <View style={{flex: 1}}>
+            <DropdownComponent setGridSize={setGridSize}></DropdownComponent>
+          </View>
+          <View style={{flex: 1}}>
+            <TextToSpeech data={{text: response!!}}></TextToSpeech>
+          </View>
+        </View>
+        <View>
+          <Button title="Generate AI Response" onPress={handlePress} />
+          {loading ? (
+            <Text style={{color: 'black'}}>Loading...</Text>
+          ) : (
+            <Text style={{color: 'black'}}>Response: {response}</Text>
           )}
         </View>
         {/* <Button

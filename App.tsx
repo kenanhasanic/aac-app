@@ -33,6 +33,8 @@ import {
 import Card from './components/Card';
 import cardsData from './static/cardData';
 import HomeScreen from './screens/HomeScreen';
+import CreateCard from './screens/CreateCard';
+import Icon from 'react-native-vector-icons/AntDesign';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -80,19 +82,6 @@ function DetailsScreen({navigation}: any) {
     </View>
   );
 }
-function AboutScreen({navigation}: any) {
-  return (
-    <View
-      style={{
-        height: 200,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'green',
-      }}>
-      <Text>About Screen</Text>
-    </View>
-  );
-}
 
 const StackA = createNativeStackNavigator();
 
@@ -113,11 +102,11 @@ const StackB = createNativeStackNavigator();
 function StackBNavigator() {
   return (
     <StackB.Navigator
-      initialRouteName="About"
+      initialRouteName="CreateCard"
       screenOptions={{
         headerShown: false,
       }}>
-      <StackB.Screen name="About" component={AboutScreen} />
+      <StackB.Screen name="CreateCard" component={CreateCard} />
     </StackB.Navigator>
   );
 }
@@ -134,20 +123,36 @@ function App(): React.JSX.Element {
   return (
     <NavigationContainer>
       <Tab.Navigator
-        screenOptions={{
-          tabBarStyle: {
-            paddingBottom: 10,
-            paddingTop: 5,
-            height: 70,
+        screenOptions={({route}) => ({
+          tabBarIcon: ({color, size}) => {
+            let iconName: string = '';
+            if (route.name === 'Home') {
+              iconName = 'home';
+            } else if (route.name === 'Create Card') {
+              iconName = 'addfile';
+            }
+            return <Icon name={iconName} size={size} color="white" />;
           },
-        }}>
+          tabBarLabelStyle: {
+            fontSize: 14,
+            color: 'white',
+          },
+          tabBarStyle: {
+            height: 60,
+          },
+          tabBarItemStyle: {
+            width: '50%', // Each tab takes 50% of the width
+          },
+          tabBarActiveBackgroundColor: 'tomato', // Background color of the active tab
+          tabBarInactiveBackgroundColor: 'gray', // Background color of the inactive tab
+        })}>
         <Tab.Screen
           name="Home"
           component={StackANavigator}
           options={{headerShown: false}}
         />
         <Tab.Screen
-          name="StackB"
+          name="Create Card"
           component={StackBNavigator}
           options={{headerShown: false}}
         />
