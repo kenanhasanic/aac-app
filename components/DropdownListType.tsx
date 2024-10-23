@@ -3,24 +3,21 @@ import {StyleSheet} from 'react-native';
 import {Dropdown} from 'react-native-element-dropdown';
 
 const data = [
-  {label: '3', value: '3'},
-  {label: '4', value: '4'},
-  {label: '5', value: '5'},
-  {label: '6', value: '6'},
-  {label: '7', value: '7'},
-  {label: '8', value: '8'},
+  {label: 'Custom Cards', value: '1'},
+  {label: 'Generic Cards', value: '2'},
+  {label: 'All Cards', value: '3'},
 ];
 
-const DropdownComponent = ({setGridSize}: any) => {
+const DropdownListType = ({setStreamType}: any) => {
   const [value, setValue] = useState('3');
 
   useEffect(() => {
-    setGridSize(value);
+    setStreamType(value);
   }, [value]);
 
   return (
     <Dropdown
-      style={[styles.dropdown, {width: 70}]}
+      style={[styles.dropdown, {width: '100%'}]}
       placeholderStyle={styles.placeholderStyle}
       selectedTextStyle={styles.selectedTextStyle}
       inputSearchStyle={styles.inputSearchStyle}
@@ -41,15 +38,15 @@ const DropdownComponent = ({setGridSize}: any) => {
   );
 };
 
-export default DropdownComponent;
+export default DropdownListType;
 
 const styles = StyleSheet.create({
   dropdown: {
     width: '100%',
     margin: 16,
-    height: 50,
+    height: 40,
     borderBottomColor: 'gray',
-    borderBottomWidth: 0.5,
+    // borderBottomWidth: 0.5,
     textDecorationColor: 'black',
   },
   itemText: {

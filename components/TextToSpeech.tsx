@@ -11,6 +11,9 @@ const GOOGLE_CLOUD_TTS_API_KEY = 'AIzaSyBWgNJNbd8ZotSbPpkz4XLvhyL4QXzWdNA';
 interface TTSProps {
   data: {
     text: string;
+    isAiGenerated: boolean;
+    isDisabled: boolean;
+    handleGenerate: Function | null;
   };
 }
 
@@ -21,8 +24,13 @@ const TextToSpeech = ({data}: TTSProps) => {
   }, [data]);
 
   useEffect(() => {
-    console.log(text);
-    if (text !== undefined && text !== '' && text !== null) handleTTSRequest();
+    if (
+      text !== undefined &&
+      text !== '' &&
+      text !== null &&
+      data.isAiGenerated === true
+    )
+      handleTTSRequest();
   }, [text]);
 
   const [audioPath, setAudioPath] = useState<string | null>(null);
@@ -81,15 +89,23 @@ const TextToSpeech = ({data}: TTSProps) => {
   return (
     <View>
       <TouchableOpacity
-        onPress={handleTTSRequest}
-        style={{
-          backgroundColor: 'red',
-          justifyContent: 'center',
-          alignItems: 'center',
-          height: 50,
-          width: 50,
-          borderRadius: 1000,
-        }}>
+        disabled={data.isDisabled}
+        onPress={() => {
+          if (data.handleGenerate === null) handleTTSRequest();
+          else data.handleGenerate();
+        }}
+        style={[
+          {
+            backgroundColor: 'red',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: 50,
+            width: 50,
+            borderRadius: 1000,
+          },
+          data.isAiGenerated ? {backgroundColor: 'blue'} : {},
+          data.isDisabled ? {opacity: 0.5} : {},
+        ]}>
         <Icon name="controller-play" size={30} color="#fff" />
       </TouchableOpacity>
     </View>

@@ -10,6 +10,7 @@ import type {PropsWithChildren} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import {MD3LightTheme as DefaultTheme} from 'react-native-paper';
 import {
   Button,
   Dimensions,
@@ -35,6 +36,7 @@ import cardsData from './static/cardData';
 import HomeScreen from './screens/HomeScreen';
 import CreateCard from './screens/CreateCard';
 import Icon from 'react-native-vector-icons/AntDesign';
+import {PaperProvider} from 'react-native-paper';
 
 type SectionProps = PropsWithChildren<{
   title: string;
@@ -113,51 +115,57 @@ function StackBNavigator() {
 
 const Tab = createBottomTabNavigator();
 
+const theme = {
+  ...DefaultTheme,
+  // Specify custom property
+  myOwnProperty: true,
+  // Specify custom property in nested object
+  colors: {
+    ...DefaultTheme.colors,
+    myOwnColor: '#BADA55',
+  },
+};
+
 function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
-
   return (
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({route}) => ({
-          tabBarIcon: ({color, size}) => {
-            let iconName: string = '';
-            if (route.name === 'Home') {
-              iconName = 'home';
-            } else if (route.name === 'Create Card') {
-              iconName = 'addfile';
-            }
-            return <Icon name={iconName} size={size} color="white" />;
-          },
-          tabBarLabelStyle: {
-            fontSize: 14,
-            color: 'white',
-          },
-          tabBarStyle: {
-            height: 60,
-          },
-          tabBarItemStyle: {
-            width: '50%', // Each tab takes 50% of the width
-          },
-          tabBarActiveBackgroundColor: 'tomato', // Background color of the active tab
-          tabBarInactiveBackgroundColor: 'gray', // Background color of the inactive tab
-        })}>
-        <Tab.Screen
-          name="Home"
-          component={StackANavigator}
-          options={{headerShown: false}}
-        />
-        <Tab.Screen
-          name="Create Card"
-          component={StackBNavigator}
-          options={{headerShown: false}}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
+    <PaperProvider theme={theme}>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({route}) => ({
+            tabBarIcon: ({color, size}) => {
+              let iconName: string = '';
+              if (route.name === 'Home') {
+                iconName = 'home';
+              } else if (route.name === 'Create Card') {
+                iconName = 'addfile';
+              }
+              return <Icon name={iconName} size={size} color="white" />;
+            },
+            tabBarLabelStyle: {
+              fontSize: 14,
+              color: 'white',
+            },
+            tabBarStyle: {
+              height: 60,
+            },
+            tabBarHideOnKeyboard: true,
+            tabBarItemStyle: {},
+            tabBarActiveBackgroundColor: 'tomato', // Background color of the active tab
+            tabBarInactiveBackgroundColor: 'gray', // Background color of the inactive tab
+          })}>
+          <Tab.Screen
+            name="Home"
+            component={StackANavigator}
+            options={{headerShown: false}}
+          />
+          <Tab.Screen
+            name="Create Card"
+            component={StackBNavigator}
+            options={{headerShown: false}}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
+    </PaperProvider>
   );
 }
 

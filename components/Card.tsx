@@ -3,8 +3,10 @@ import React, {useEffect, useState} from 'react';
 
 interface CardProps {
   data: {
+    id: number;
     backgroundColor: string;
     text: string;
+    title: string;
     image: string;
     width: number; // TODO: use this to change grid size
   };
@@ -43,7 +45,7 @@ export default function Card({data}: CardProps) {
           paddingVertical: data.width / 40,
           fontSize: data.width / 10,
         }}>
-        {data.text}
+        {data.title}
       </Text>
       {imageHeight && (
         <Image

@@ -10,16 +10,18 @@ import {
 import React, {useEffect, useState} from 'react';
 import cardsData from '../static/cardData';
 import Card from '../components/Card';
-import DropdownComponent from '../components/Dropdown';
+import DropdownComponentGrid from '../components/DropdownGrid';
 import CardStream from '../components/CardStream';
 import Icon from 'react-native-vector-icons/Entypo';
 import {AiGeneratedPhrase} from '../functions/AiGeneratedPhrase';
 import TextToSpeech from '../components/TextToSpeech';
+import DropdownListType from '../components/DropdownListType';
 
 interface Card {
   id: number;
   backgroundColor: string;
   text: string;
+  title: string;
   image: string;
   width: number; // TODO: use this to change grid size
 }
@@ -31,9 +33,11 @@ export default function HomeScreen({navigation}: any) {
 
   const [gridSize, setGridSize] = useState<any>('3');
 
+  const [streamType, setStreamType] = useState<any>('3');
+
   const [streamClickedIcons, setStreamClickedIcons] = useState<Card[]>([]);
 
-  const [inputString, setInputString] = useState('Volim jesti gliste');
+  const [inputString, setInputString] = useState('');
 
   const [response, setResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -66,7 +70,7 @@ export default function HomeScreen({navigation}: any) {
 
   console.log('inputString: ', inputString);
 
-  const handlePress = async () => {
+  const handlePressGenerate = async () => {
     setLoading(true); // Set loading to true while awaiting the response
     try {
       const result = await AiGeneratedPhrase(inputString);
@@ -90,6 +94,7 @@ export default function HomeScreen({navigation}: any) {
               stream: streamClickedIcons,
               height: cardWidth,
               deleteClickedIcon: deleteClickedIcon,
+              setIconArray: setStreamClickedIcons,
             }}></CardStream>
         </View>
         <View
@@ -128,29 +133,54 @@ export default function HomeScreen({navigation}: any) {
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
+            width: '90%',
+            alignSelf: 'center',
+            paddingVertical: 10,
           }}>
-          <View style={{flex: 1}}>
-            <Icon name="controller-play" size={30} color="#900" />
+          <View>
+            <TextToSpeech
+              data={{
+                text: response!!,
+                isAiGenerated: true,
+                isDisabled: inputString === '' ? true : false,
+                handleGenerate: handlePressGenerate,
+              }}></TextToSpeech>
           </View>
-          <View style={{flex: 1}}>
-            <DropdownComponent setGridSize={setGridSize}></DropdownComponent>
+          <View
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: '20%',
+            }}>
+            <DropdownComponentGrid
+              setGridSize={setGridSize}></DropdownComponentGrid>
           </View>
-          <View style={{flex: 1}}>
-            <TextToSpeech data={{text: response!!}}></TextToSpeech>
+          <View
+            style={{
+              justifyContent: 'center',
+              alignItems: 'center',
+              width: '30%',
+            }}>
+            <DropdownListType setStreamType={setStreamType}></DropdownListType>
+          </View>
+
+          <View style={{alignItems: 'flex-end'}}>
+            <TextToSpeech
+              data={{
+                text: inputString,
+                isAiGenerated: false,
+                isDisabled: inputString === '' ? true : false,
+                handleGenerate: null,
+              }}></TextToSpeech>
           </View>
         </View>
         <View>
-          <Button title="Generate AI Response" onPress={handlePress} />
           {loading ? (
             <Text style={{color: 'black'}}>Loading...</Text>
           ) : (
             <Text style={{color: 'black'}}>Response: {response}</Text>
           )}
         </View>
-        {/* <Button
-        title="Go to Details"
-        onPress={() => navigation.navigate('DetailsScreen')}
-      /> */}
       </View>
     </SafeAreaView>
   );
