@@ -270,7 +270,7 @@ export default function EditScreen({route, navigation}: any) {
         <View style={{flex: 1}}>
           <View style={styles.cardPreview}>
             <View style={{alignItems: 'center', marginVertical: 20}}>
-              <Text style={styles.cardPreviewText}>New card preview:</Text>
+              {/* <Text style={styles.cardPreviewText}>New card preview:</Text> */}
               <CardComponent data={cardCreationData}></CardComponent>
             </View>
             <View

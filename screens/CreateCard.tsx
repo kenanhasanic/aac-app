@@ -100,8 +100,8 @@ interface Card {
 export default function CreateCard({navigation}: any) {
   const [visible, setVisible] = useState(false);
 
-  const [text, setText] = React.useState('d');
-  const [title, setTitle] = React.useState('d');
+  const [text, setText] = React.useState('');
+  const [title, setTitle] = React.useState('');
 
   const [colorIndex, setColorIndex] = useState(-1);
 
