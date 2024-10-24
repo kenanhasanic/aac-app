@@ -34,6 +34,7 @@ import {
 import Card from './components/Card';
 import cardsData from './static/cardData';
 import HomeScreen from './screens/HomeScreen';
+import EditScreen from './screens/EditScreen';
 import CreateCard from './screens/CreateCard';
 import Icon from 'react-native-vector-icons/AntDesign';
 import {PaperProvider} from 'react-native-paper';
@@ -70,20 +71,6 @@ type SectionProps = PropsWithChildren<{
 //     </View>
 //   );
 // }
-function DetailsScreen({navigation}: any) {
-  return (
-    <View
-      style={{
-        height: 200,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'green',
-      }}>
-      <Text>Details Screen</Text>
-      <Button title="Go Back" onPress={() => navigation.goBack()} />
-    </View>
-  );
-}
 
 const StackA = createNativeStackNavigator();
 
@@ -95,7 +82,11 @@ function StackANavigator() {
         headerShown: false,
       }}>
       <StackA.Screen name="HomeScreen" component={HomeScreen} />
-      <StackA.Screen name="DetailsScreen" component={DetailsScreen} />
+      <StackA.Screen
+        name="EditScreen"
+        component={EditScreen}
+        options={{headerShown: true}}
+      />
     </StackA.Navigator>
   );
 }

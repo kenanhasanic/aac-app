@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "66728773945",
+    "project_id": "diplomski-fb5af",
+    "storage_bucket": "diplomski-fb5af.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:66728773945:android:ed8c7cb37afc74873340e8",
+        "android_client_info": {
+          "package_name": "com.applicationforaac"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBIKN7C6tkOvhasMdkC8512cl4rB4_l2Do"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

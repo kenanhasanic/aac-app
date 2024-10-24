@@ -9,7 +9,7 @@ const data = [
 ];
 
 const DropdownListType = ({setStreamType}: any) => {
-  const [value, setValue] = useState('3');
+  const [value, setValue] = useState('1');
 
   useEffect(() => {
     setStreamType(value);
