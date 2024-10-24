@@ -19,18 +19,19 @@ export default function Card({data}: CardProps) {
 
   useEffect(() => {
     // Fetch the actual width and height of the image from the URL
-    Image.getSize(data.image, (width, height) => {
-      // Calculate the new height based on the provided width and the image's aspect ratio
-      const aspectRatio = height / width;
-      const newHeight = data.width * aspectRatio;
-      setImageHeight(newHeight);
-    });
+    if (data.image !== '') {
+      Image.getSize(data.image, (width, height) => {
+        // Calculate the new height based on the provided width and the image's aspect ratio
+        const aspectRatio = height / width;
+        const newHeight = data.width * aspectRatio;
+        setImageHeight(newHeight);
+      });
+    }
   }, [data]);
 
   return (
     <View
       style={{
-        backgroundColor: data.backgroundColor,
         width: data.width - (data.width / 30) * 2,
         height: data.width - (data.width / 30) * 2,
         borderRadius: data.width / 10,
@@ -38,23 +39,72 @@ export default function Card({data}: CardProps) {
         alignItems: 'center',
         overflow: 'hidden',
         margin: data.width / 30,
+        position: 'relative',
       }}>
-      <Text
+      <View
         style={{
-          color: 'white',
           paddingVertical: data.width / 40,
-          fontSize: data.width / 10,
+          alignItems: 'center',
+          position: 'absolute',
+          top: 0,
+          zIndex: 10,
+          backgroundColor: data.backgroundColor,
+
+          width: '100%',
         }}>
-        {data.title}
-      </Text>
-      {imageHeight && (
-        <Image
-          source={{uri: data.image}} // For remote images
+        <Text style={{color: 'white', fontSize: data.width / 10}}>
+          {data.title}
+        </Text>
+      </View>
+      <View
+        style={{
+          paddingVertical: data.width / 40,
+          alignItems: 'center',
+          position: 'absolute',
+          top: 0,
+          zIndex: -1,
+          backgroundColor: data.backgroundColor,
+          opacity: 0.5,
+
+          width: '100%',
+          aspectRatio: 1 / 1,
+        }}></View>
+      <View
+        style={{
+          paddingVertical: data.width / 40,
+          alignItems: 'center',
+          position: 'absolute',
+          top: 0,
+          zIndex: 10,
+          borderWidth: data.width / 50,
+          borderColor: data.backgroundColor,
+          borderRadius: data.width / 10,
+          width: '100%',
+          aspectRatio: 1 / 1,
+        }}></View>
+
+      {data.image === '' ? (
+        <View
           style={{
-            width: data.width,
-            height: data.width,
-          }}
-        />
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100%',
+            width: '95%',
+          }}>
+          <Text style={{color: 'white', fontSize: data.width / 8}}>
+            {data.text}
+          </Text>
+        </View>
+      ) : (
+        imageHeight && (
+          <Image
+            source={{uri: data.image}} // For remote images
+            style={{
+              width: data.width,
+              height: data.width,
+            }}
+          />
+        )
       )}
     </View>
   );
