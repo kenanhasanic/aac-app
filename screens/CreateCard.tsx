@@ -10,7 +10,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Avatar,
   Button,
@@ -30,6 +30,10 @@ import colors from '../static/colorData';
 import firestore from '@react-native-firebase/firestore';
 import {collection, addDoc} from 'firebase/firestore';
 import storage from '@react-native-firebase/storage';
+import CardData from '../static/cardInterface';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import aacCategoriesWithColors from '../static/categories';
+import SettingsModal from '../components/SettingsModal';
 
 const placeholderImage =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAREAAAC4CAMAAADzLiguAAAAPFBMVEX///+rq6unp6fMzMykpKTp6enx8fHU1NS0tLS6urr6+vqwsLDHx8fPz8/w8PD19fXa2trh4eHl5eXAwMAzrysnAAADpklEQVR4nO2c2ZKDIBAAE6KJmsPr//91c69yKKREHav7dctl6YVhGJTdDgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZqE5LMU1XbrvVupELUe9dO9t5PsFyZfuvY1FjWRL994GRnQeRs5NOj+rNpIVCzSMER2M6GBEByM6GNHBiI4cI+mhbdtLE12SFCO3XKnH36ryJnLDQoxU/xm2usZtWIaRWu1nUyLCSNnfh6moE0eEkYvqK4lavpBgpNA368ktYsMSjKSJbqSK2LAEI7VuRB0iNizBSGUYuURsWIIRc4zEXH8lGDkacSTm6YEEI7tMX2zKiA2LMFL185HAMJJWdcj2UIQRfZCEDJEyT5JkH7BcyzBSnrujJORY9r0BSPzXaxlGHv/pz5TJQoQUn4Mw5T1KhBi5x5LseUadnYJKRlcVPLLEGNkVt7qq0rASWtOZa7nno3KM/EB5/mGF2rSRvLdqe+Z1WzZy0Moq6ujz1IaNNJoQz1CyXSO9IPIeJD5ZyXaN6KXIJx6hZLNGKpuQ/Xl8A7BVI6nNx+MAbPTJjRopjAKCdyjZqJHWOmeeSsay+W0asQcRv1CySSM3t4/7IGmHH96ikW8JwKHkNPj0Fo3o2bvBYCiRayRt84u1a/WYkOHfK9bISam92lvW0qOZvRvzZqgwINXI+5zP0rd8dIgMHxwLNdI4+zYaRF643y6QaaT4nxlaxtXo538O3LJlGmk7fetlXKW9/ybuUCLSSC8l7WZchTt7N5S4QolEI1pK2sm4Tt5C7mPLEUoEGjH3tZ++OUoAjkHiKAwINGIWx86vHxTjmUhPib0wIM+IZV/7DpOhn/bZjyvEGbHOjGffQoLIG1thQJoRV3HsFhZEXqjWolyaEUdKqvLyl89hbYUBYUbcKWlYVP1i7p5lGfFOSb05G9JlGfHZ14ZhZiWijFwnF2IJJZKM1NP7eKCFEkFGLEfbk5D1sxJBRvz3tWFohQE5Rk6etaAflPQKA2KMpJFGyJNuYUCKkdJ1tD0JXfVSjFjfj5mMbigRYmToaHsSJf+FARlGftjXhvJ9j1GEEef7MdOhvu8xijASN4i8lXy+dJNgxPhOLw7vL80FGDnO4uN7FCbAyGx3xb0KA+s3cpntysnkGUpWb6Q8zcjjP7B6I7ODEZ1VGznfjrNzW7WRfbIA6zayFBjRWeWtxhU3X+vUi92Ofoh9CR0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMA2+AN7/TZH3Ls1kQAAAABJRU5ErkJggg==';
@@ -83,108 +87,147 @@ const styles = StyleSheet.create({
   },
 
   colorsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    width: '60%',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: Dimensions.get('window').width,
   },
 });
-
-interface Card {
-  id: number;
-  backgroundColor: string;
-  text: string;
-  title: string;
-  image: string;
-  width: number; // TODO: use this to change grid size
-}
 
 export default function CreateCard({navigation}: any) {
   const [text, setText] = React.useState('');
   const [title, setTitle] = React.useState('');
 
   const [colorIndex, setColorIndex] = useState(-1);
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   const [loading, setLoading] = useState(false);
-  const [cardCreationData, setCardCreationData] = useState<Card>({
+  const [cardCreationData, setCardCreationData] = useState<CardData>({
     id: 0,
+    uid: '',
     backgroundColor: 'gray',
     text: 'New Card',
     title: 'New title',
     image: placeholderImage,
     width: 300,
+    category: '',
   });
+
+  const getSafeModeData = async () => {
+    const storedSafeModeData = await AsyncStorage.getItem('safeModeData');
+    if (storedSafeModeData) {
+      openModal();
+    } else {
+      handleCreateCard();
+    }
+  };
+  const openModal = () => {
+    setModalVisible(true);
+  };
+
+  const closeModal = (isAllowedAccess: string) => {
+    setModalVisible(false);
+    if (isAllowedAccess) {
+      handleCreateCard();
+    }
+  };
 
   const CreateCardImageless = async () => {
     setLoading(true);
     const newDocRef = firestore().collection('CustomCard').doc();
 
-    await firestore()
-      .collection('CustomCard') // Firestore collection name
-      .add({...cardCreationData, image: '', id: newDocRef.id}) // Upload the card object
-      .then(() => {
-        console.log('CustomCard successfully added to Firestore!');
-      })
-      .catch(error => {
-        console.error('Error adding card to collection:', error);
-      })
-      .finally(() => {
-        setLoading(false);
-        navigation.navigate('HomeScreen'); // End loading
-      });
+    const storedUser = await AsyncStorage.getItem('user');
+
+    if (storedUser !== null) {
+      await firestore()
+        .collection('CustomCard') // Firestore collection name
+        .add({
+          ...cardCreationData,
+          image: '',
+          id: newDocRef.id,
+          uid: JSON.parse(storedUser).uid,
+        }) // Upload the card object
+        .then(() => {
+          console.log('CustomCard successfully added to Firestore!');
+        })
+        .catch(error => {
+          console.error('Error adding card to collection:', error);
+        })
+        .finally(() => {
+          setLoading(false);
+          navigation.navigate('HomeScreen'); // End loading
+        });
+    } else {
+      Alert.alert(
+        'Error',
+        'There was an issue adding the card without image.',
+        [{text: 'OK', onPress: () => console.log('OK Pressed')}],
+      );
+      setLoading(false);
+    }
   };
 
   const CreateCard = async () => {
     setLoading(true);
 
-    const fileName = cardCreationData.image.substring(
-      cardCreationData.image.lastIndexOf('/') + 1,
-    );
-    const storageRef = storage().ref(`images/${fileName}`);
+    const storedUser = await AsyncStorage.getItem('user');
 
-    const task = storageRef.putFile(cardCreationData.image);
-
-    // Monitor upload progress
-    task.on('state_changed', taskSnapshot => {
-      console.log(
-        `${taskSnapshot.bytesTransferred} transferred out of ${taskSnapshot.totalBytes}`,
+    if (storedUser !== null) {
+      const fileName = cardCreationData.image.substring(
+        cardCreationData.image.lastIndexOf('/') + 1,
       );
-    });
+      const storageRef = storage().ref(`images/${fileName}`);
 
-    // Handle successful upload
-    task
-      .then(async () => {
-        const downloadURL = await storageRef.getDownloadURL();
-        console.log('Image uploaded to Firebase successfully:', downloadURL);
+      const task = storageRef.putFile(cardCreationData.image);
 
-        // Set the image URL in the state after upload
-
-        //Getting reference for the custom unique id
-        const newDocRef = firestore().collection('CustomCard').doc();
-
-        setCardCreationData(prevData => ({
-          ...prevData,
-          image: downloadURL,
-        }));
-
-        await firestore()
-          .collection('CustomCard') // Firestore collection name
-          .add({...cardCreationData, image: downloadURL, id: newDocRef.id}) // Upload the card object
-          .then(() => {
-            console.log('CustomCard successfully added to Firestore!');
-          })
-          .catch(error => {
-            console.error('Error adding card to collection:', error);
-          });
-      })
-      .catch(error => {
-        console.error('Error uploading image:', error);
-      })
-      .finally(() => {
-        setLoading(false);
-        navigation.navigate('HomeScreen'); // End loading
+      // Monitor upload progress
+      task.on('state_changed', taskSnapshot => {
+        console.log(
+          `${taskSnapshot.bytesTransferred} transferred out of ${taskSnapshot.totalBytes}`,
+        );
       });
+
+      // Handle successful upload
+      task
+        .then(async () => {
+          const downloadURL = await storageRef.getDownloadURL();
+          console.log('Image uploaded to Firebase successfully:', downloadURL);
+
+          // Set the image URL in the state after upload
+
+          //Getting reference for the custom unique id
+          const newDocRef = firestore().collection('CustomCard').doc();
+
+          setCardCreationData(prevData => ({
+            ...prevData,
+            image: downloadURL,
+          }));
+
+          await firestore()
+            .collection('CustomCard') // Firestore collection name
+            .add({
+              ...cardCreationData,
+              image: downloadURL,
+              id: newDocRef.id,
+              uid: JSON.parse(storedUser).uid,
+            }) // Upload the card object
+            .then(() => {
+              console.log('CustomCard successfully added to Firestore!');
+            })
+            .catch(error => {
+              console.error('Error adding card to collection:', error);
+            });
+        })
+        .catch(error => {
+          console.error('Error uploading image:', error);
+        })
+        .finally(() => {
+          setLoading(false);
+          navigation.navigate('HomeScreen'); // End loading
+        });
+    } else {
+      Alert.alert('Error', 'There was an issue adding the card with image. ', [
+        {text: 'OK', onPress: () => console.log('OK Pressed')},
+      ]);
+      setLoading(false);
+    }
   };
 
   const handleCreateCard = () => {
@@ -235,6 +278,7 @@ export default function CreateCard({navigation}: any) {
   return (
     <KeyboardAwareScrollView>
       <ScrollView>
+        <SettingsModal visible={modalVisible} onClose={closeModal} />
         <View style={{flex: 1}}>
           <View style={styles.cardPreview}>
             <View style={{alignItems: 'center', marginVertical: 20}}>
@@ -343,55 +387,88 @@ export default function CreateCard({navigation}: any) {
                   </View>
                 )}
                 <View style={{marginTop: 20}}>
-                  <Text style={styles.cardColorText}>Choose card color:</Text>
-                </View>
-                <View style={styles.colorsContainer}>
-                  {colors.map((color, index) => {
-                    return (
-                      <View
-                        key={index}
-                        style={{
-                          width: '25%',
-                          paddingVertical: 10,
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                        }}>
-                        <TouchableOpacity
-                          onPress={() => {
-                            setColorIndex(index);
-                            setCardCreationData({
-                              ...cardCreationData,
-                              backgroundColor: color,
-                            });
-                          }}>
-                          <View
-                            style={[
-                              {
-                                backgroundColor: color,
-                                width: '75%',
-                                aspectRatio: 1 / 1,
-                                borderRadius: 1000,
-                                borderWidth: 0,
-                                borderColor: 'lightgray',
-                              },
-                              colorIndex === index
-                                ? {
-                                    borderWidth: 5,
-                                    width: '100%',
-                                  }
-                                : {},
-                            ]}></View>
-                        </TouchableOpacity>
-                      </View>
-                    );
-                  })}
+                  <Text style={styles.cardColorText}>
+                    Choose card category and color
+                  </Text>
                 </View>
               </View>
             </View>
           </View>
+          <View style={styles.colorsContainer}>
+            {aacCategoriesWithColors.map((category, index) => {
+              return (
+                <View
+                  key={index}
+                  style={{
+                    width: '100%',
+                    paddingVertical: 10,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setColorIndex(index);
+                      setCardCreationData({
+                        ...cardCreationData,
+                        backgroundColor: category.at(1)!!,
+                        category: category.at(0)!!,
+                      });
+                    }}
+                    style={{
+                      width: (Dimensions.get('window').width * 6) / 8,
+                      height: 50,
+                      alignItems: 'center',
+                    }}>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'flex-start',
+                        alignItems: 'center',
+                        gap: 20,
+                        width: '80%',
+                      }}>
+                      <View
+                        style={[
+                          {
+                            height: '90%',
+                            aspectRatio: 1 / 1,
+                            borderRadius: 1000,
+                            backgroundColor: category[1],
+                          },
+                          colorIndex === index
+                            ? {
+                                borderWidth: 4,
+                                borderColor: 'gray',
+                                height: '100%',
+                              }
+                            : {},
+                        ]}></View>
+                      <View
+                        style={{
+                          height: 1,
+                          width: 10,
+                          backgroundColor: 'gray',
+                        }}></View>
+                      <View>
+                        <Text
+                          style={{
+                            color: 'gray',
+                            textTransform: 'uppercase',
+                            fontStyle: 'italic',
+                            fontWeight: 'bold',
+                          }}>
+                          {category.at(0)}
+                        </Text>
+                      </View>
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
+          </View>
           <TouchableOpacity
             onPress={() => {
-              handleCreateCard();
+              getSafeModeData();
             }}>
             <View
               style={{

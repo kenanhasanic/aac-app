@@ -30,6 +30,8 @@ import colors from '../static/colorData';
 import firestore from '@react-native-firebase/firestore';
 import {collection, addDoc} from 'firebase/firestore';
 import storage from '@react-native-firebase/storage';
+import CardData from '../static/cardInterface';
+import aacCategoriesWithColors from '../static/categories';
 
 const styles = StyleSheet.create({
   container: {
@@ -88,14 +90,8 @@ const styles = StyleSheet.create({
   },
 });
 
-interface Card {
-  id: number;
-  backgroundColor: string;
-  text: string;
-  title: string;
-  image: string;
-  width: number; // TODO: use this to change grid size
-}
+const placeholderImage =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAREAAAC4CAMAAADzLiguAAAAPFBMVEX///+rq6unp6fMzMykpKTp6enx8fHU1NS0tLS6urr6+vqwsLDHx8fPz8/w8PD19fXa2trh4eHl5eXAwMAzrysnAAADpklEQVR4nO2c2ZKDIBAAE6KJmsPr//91c69yKKREHav7dctl6YVhGJTdDgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZqE5LMU1XbrvVupELUe9dO9t5PsFyZfuvY1FjWRL994GRnQeRs5NOj+rNpIVCzSMER2M6GBEByM6GNHBiI4cI+mhbdtLE12SFCO3XKnH36ryJnLDQoxU/xm2usZtWIaRWu1nUyLCSNnfh6moE0eEkYvqK4lavpBgpNA368ktYsMSjKSJbqSK2LAEI7VuRB0iNizBSGUYuURsWIIRc4zEXH8lGDkacSTm6YEEI7tMX2zKiA2LMFL185HAMJJWdcj2UIQRfZCEDJEyT5JkH7BcyzBSnrujJORY9r0BSPzXaxlGHv/pz5TJQoQUn4Mw5T1KhBi5x5LseUadnYJKRlcVPLLEGNkVt7qq0rASWtOZa7nno3KM/EB5/mGF2rSRvLdqe+Z1WzZy0Moq6ujz1IaNNJoQz1CyXSO9IPIeJD5ZyXaN6KXIJx6hZLNGKpuQ/Xl8A7BVI6nNx+MAbPTJjRopjAKCdyjZqJHWOmeeSsay+W0asQcRv1CySSM3t4/7IGmHH96ikW8JwKHkNPj0Fo3o2bvBYCiRayRt84u1a/WYkOHfK9bISam92lvW0qOZvRvzZqgwINXI+5zP0rd8dIgMHxwLNdI4+zYaRF643y6QaaT4nxlaxtXo538O3LJlGmk7fetlXKW9/ybuUCLSSC8l7WZchTt7N5S4QolEI1pK2sm4Tt5C7mPLEUoEGjH3tZ++OUoAjkHiKAwINGIWx86vHxTjmUhPib0wIM+IZV/7DpOhn/bZjyvEGbHOjGffQoLIG1thQJoRV3HsFhZEXqjWolyaEUdKqvLyl89hbYUBYUbcKWlYVP1i7p5lGfFOSb05G9JlGfHZ14ZhZiWijFwnF2IJJZKM1NP7eKCFEkFGLEfbk5D1sxJBRvz3tWFohQE5Rk6etaAflPQKA2KMpJFGyJNuYUCKkdJ1tD0JXfVSjFjfj5mMbigRYmToaHsSJf+FARlGftjXhvJ9j1GEEef7MdOhvu8xijASN4i8lXy+dJNgxPhOLw7vL80FGDnO4uN7FCbAyGx3xb0KA+s3cpntysnkGUpWb6Q8zcjjP7B6I7ODEZ1VGznfjrNzW7WRfbIA6zayFBjRWeWtxhU3X+vUi92Ofoh9CR0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMA2+AN7/TZH3Ls1kQAAAABJRU5ErkJggg==';
 
 export default function EditScreen({route, navigation}: any) {
   const {cardData} = route.params;
@@ -111,14 +107,15 @@ export default function EditScreen({route, navigation}: any) {
 
   const [loading, setLoading] = useState(false);
   const [loadingDelete, setLoadingDelete] = useState(false);
-  const [cardCreationData, setCardCreationData] = useState<Card>({
+  const [cardCreationData, setCardCreationData] = useState<CardData>({
     id: 0,
+    uid: '',
     backgroundColor: 'gray',
     text: 'New Card',
     title: 'New title',
-    image:
-      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAREAAAC4CAMAAADzLiguAAAAPFBMVEX///+rq6unp6fMzMykpKTp6enx8fHU1NS0tLS6urr6+vqwsLDHx8fPz8/w8PD19fXa2trh4eHl5eXAwMAzrysnAAADpklEQVR4nO2c2ZKDIBAAE6KJmsPr//91c69yKKREHav7dctl6YVhGJTdDgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAZqE5LMU1XbrvVupELUe9dO9t5PsFyZfuvY1FjWRL994GRnQeRs5NOj+rNpIVCzSMER2M6GBEByM6GNHBiI4cI+mhbdtLE12SFCO3XKnH36ryJnLDQoxU/xm2usZtWIaRWu1nUyLCSNnfh6moE0eEkYvqK4lavpBgpNA368ktYsMSjKSJbqSK2LAEI7VuRB0iNizBSGUYuURsWIIRc4zEXH8lGDkacSTm6YEEI7tMX2zKiA2LMFL185HAMJJWdcj2UIQRfZCEDJEyT5JkH7BcyzBSnrujJORY9r0BSPzXaxlGHv/pz5TJQoQUn4Mw5T1KhBi5x5LseUadnYJKRlcVPLLEGNkVt7qq0rASWtOZa7nno3KM/EB5/mGF2rSRvLdqe+Z1WzZy0Moq6ujz1IaNNJoQz1CyXSO9IPIeJD5ZyXaN6KXIJx6hZLNGKpuQ/Xl8A7BVI6nNx+MAbPTJjRopjAKCdyjZqJHWOmeeSsay+W0asQcRv1CySSM3t4/7IGmHH96ikW8JwKHkNPj0Fo3o2bvBYCiRayRt84u1a/WYkOHfK9bISam92lvW0qOZvRvzZqgwINXI+5zP0rd8dIgMHxwLNdI4+zYaRF643y6QaaT4nxlaxtXo538O3LJlGmk7fetlXKW9/ybuUCLSSC8l7WZchTt7N5S4QolEI1pK2sm4Tt5C7mPLEUoEGjH3tZ++OUoAjkHiKAwINGIWx86vHxTjmUhPib0wIM+IZV/7DpOhn/bZjyvEGbHOjGffQoLIG1thQJoRV3HsFhZEXqjWolyaEUdKqvLyl89hbYUBYUbcKWlYVP1i7p5lGfFOSb05G9JlGfHZ14ZhZiWijFwnF2IJJZKM1NP7eKCFEkFGLEfbk5D1sxJBRvz3tWFohQE5Rk6etaAflPQKA2KMpJFGyJNuYUCKkdJ1tD0JXfVSjFjfj5mMbigRYmToaHsSJf+FARlGftjXhvJ9j1GEEef7MdOhvu8xijASN4i8lXy+dJNgxPhOLw7vL80FGDnO4uN7FCbAyGx3xb0KA+s3cpntysnkGUpWb6Q8zcjjP7B6I7ODEZ1VGznfjrNzW7WRfbIA6zayFBjRWeWtxhU3X+vUi92Ofoh9CR0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMA2+AN7/TZH3Ls1kQAAAABJRU5ErkJggg==',
+    image: placeholderImage,
     width: 300,
+    category: '',
   });
 
   useEffect(() => {
@@ -139,7 +136,7 @@ export default function EditScreen({route, navigation}: any) {
           }
         })
         .then(() => {
-          console.log('Document successfully updated!');
+          console.log('Document ID updated!');
         })
         .catch(error => {
           console.error('Error updating document:', error);
@@ -151,64 +148,19 @@ export default function EditScreen({route, navigation}: any) {
     getDocId(cardData.id);
   }, [cardData]);
 
-  const handleUpdateCard = async () => {
+  const UpdateCard = async () => {
     setLoading(true);
     // Only upload the image if it has changed
-    if (cardCreationData.image !== initialImage) {
-      const fileName = cardCreationData.image.substring(
-        cardCreationData.image.lastIndexOf('/') + 1,
-      );
-      const storageRef = storage().ref(`images/${fileName}`);
-
-      const task = storageRef.putFile(cardCreationData.image);
-
-      task.on('state_changed', taskSnapshot => {
-        console.log(
-          `${taskSnapshot.bytesTransferred} transferred out of ${taskSnapshot.totalBytes}`,
-        );
-      });
-
-      await task
-        .then(async () => {
-          const downloadURL = await storageRef.getDownloadURL();
-          console.log('Image uploaded to Firebase successfully:', downloadURL);
-
-          // Update the image URL in state
-          setCardCreationData(prevData => ({
-            ...prevData,
-            image: downloadURL,
-          }));
-
-          // Update Firestore with the new image URL
-          await firestore()
-            .collection('CustomCard')
-            .doc(docId)
-            .update({...cardCreationData, image: downloadURL})
-            .then(() => {
-              console.log('CustomCard successfully updated in Firestore!');
-            })
-            .catch(error => {
-              console.error(
-                'Error updating card in Firestore while images has been changed:',
-                error,
-              );
-            });
-        })
-        .catch(error => {
-          console.error('Error uploading image:', error);
-        })
-        .finally(() => {
-          setLoading(false);
-          navigation.navigate('HomeScreen');
-        });
-    } else {
-      console.log('NO IMAGE CHANGE');
+    if (
+      cardCreationData.image === '' ||
+      cardCreationData.image === placeholderImage
+    ) {
       await firestore()
         .collection('CustomCard')
         .doc(docId)
-        .update(cardCreationData)
+        .update({...cardCreationData, image: ''})
         .then(() => {
-          console.log('CustomCard successfully updated without image upload!');
+          console.log('CustomCard successfully updated wit image clear!');
         })
         .catch(error => {
           console.error(
@@ -220,27 +172,135 @@ export default function EditScreen({route, navigation}: any) {
           setLoading(false);
           navigation.navigate('HomeScreen');
         });
+    } else {
+      if (cardCreationData.image !== initialImage) {
+        const fileName = cardCreationData.image.substring(
+          cardCreationData.image.lastIndexOf('/') + 1,
+        );
+        const storageRef = storage().ref(`images/${fileName}`);
+
+        const task = storageRef.putFile(cardCreationData.image);
+
+        task.on('state_changed', taskSnapshot => {
+          console.log(
+            `${taskSnapshot.bytesTransferred} transferred out of ${taskSnapshot.totalBytes}`,
+          );
+        });
+
+        await task
+          .then(async () => {
+            const downloadURL = await storageRef.getDownloadURL();
+            console.log(
+              'Image uploaded to Firebase successfully:',
+              downloadURL,
+            );
+
+            // Update the image URL in state
+            setCardCreationData(prevData => ({
+              ...prevData,
+              image: downloadURL,
+            }));
+
+            // Update Firestore with the new image URL
+            await firestore()
+              .collection('CustomCard')
+              .doc(docId)
+              .update({...cardCreationData, image: downloadURL})
+              .then(() => {
+                console.log('CustomCard successfully updated in Firestore!');
+              })
+              .catch(error => {
+                console.error(
+                  'Error updating card in Firestore while images has been changed:',
+                  error,
+                );
+              });
+          })
+          .catch(error => {
+            console.error('Error uploading image:', error);
+          })
+          .finally(() => {
+            setLoading(false);
+            navigation.navigate('HomeScreen');
+          });
+      } else {
+        console.log('NO IMAGE CHANGE');
+        await firestore()
+          .collection('CustomCard')
+          .doc(docId)
+          .update(cardCreationData)
+          .then(() => {
+            console.log(
+              'CustomCard successfully updated without image upload!',
+            );
+          })
+          .catch(error => {
+            console.error(
+              'Error updating card in Firestore while images has not been changed:',
+              error,
+            );
+          })
+          .finally(() => {
+            setLoading(false);
+            navigation.navigate('HomeScreen');
+          });
+      }
     }
   };
 
   const handleDeleteCard = async () => {
     setLoadingDelete(true); // Start loading
+    Alert.alert(
+      'Warning', // Title of the alert
+      'You are about to delete your card! Are you sure you want to proceed?', // Message to display
+      [
+        {text: 'Cancel', onPress: () => console.log('Cancel Pressed')},
+        {
+          text: 'OK',
+          onPress: () => {
+            firestore()
+              .collection('CustomCard')
+              .doc(docId)
+              .delete()
+              .then(() => {})
+              .catch(error => {
+                console.error('Error deleting document:', error);
+                Alert.alert('Error', 'There was an issue deleting the card.', [
+                  {text: 'OK', onPress: () => console.log('OK Pressed')},
+                ]);
+              })
+              .finally(() => {
+                setLoadingDelete(false); // End loading
+                navigation.navigate('HomeScreen'); // Navigate back to HomeScreen after deletion
+              });
+          },
+        },
+      ],
+    );
+  };
 
-    firestore()
-      .collection('CustomCard')
-      .doc(docId)
-      .delete()
-      .then(() => {})
-      .catch(error => {
-        console.error('Error deleting document:', error);
-        Alert.alert('Error', 'There was an issue deleting the card.', [
-          {text: 'OK', onPress: () => console.log('OK Pressed')},
-        ]);
-      })
-      .finally(() => {
-        setLoadingDelete(false); // End loading
-        navigation.navigate('HomeScreen'); // Navigate back to HomeScreen after deletion
-      });
+  const handleUpdateCard = () => {
+    if (
+      cardCreationData.image === undefined ||
+      cardCreationData.image === '' ||
+      cardCreationData.image === placeholderImage
+    ) {
+      Alert.alert(
+        'Warning', // Title of the alert
+        'You are about to update your card without a picture! Your text will be shown as a substitute.', // Message to display
+        [
+          {text: 'Cancel', onPress: () => console.log('Cancel Pressed')},
+          {
+            text: 'OK',
+            onPress: () => {
+              UpdateCard();
+            },
+          },
+        ],
+      );
+    } else {
+      UpdateCard();
+    }
   };
 
   const handlePressGallery = () => {
@@ -311,44 +371,81 @@ export default function EditScreen({route, navigation}: any) {
               </View>
 
               <View style={{justifyContent: 'center', alignItems: 'center'}}>
-                <TouchableOpacity
-                  onPress={() => {
-                    handlePressGallery();
-                  }}>
-                  <View
-                    style={[
-                      styles.surface,
-                      {
-                        backgroundColor: 'white',
-                        borderWidth: 1,
-                        borderColor: 'lightgray',
-                      },
-                    ]}>
-                    <Icon name="picture" size={30} color="gray" />
-                    <Text style={{color: 'gray'}}>
-                      Choose image from gallery
-                    </Text>
+                {cardCreationData.image === '' ||
+                cardCreationData.image === placeholderImage ? (
+                  <>
+                    <TouchableOpacity
+                      onPress={() => {
+                        handlePressGallery();
+                      }}>
+                      <View
+                        style={[
+                          styles.surface,
+                          {
+                            backgroundColor: 'white',
+                            borderWidth: 1,
+                            borderColor: 'lightgray',
+                          },
+                        ]}>
+                        <Icon name="picture" size={30} color="gray" />
+                        <Text style={{color: 'gray'}}>
+                          Choose image from gallery
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => {
+                        handlePressCamera();
+                      }}>
+                      <View
+                        style={[styles.surface, {backgroundColor: 'tomato'}]}>
+                        <Icon name="camerao" size={30} color="white" />
+                        <Text style={{color: 'white'}}>
+                          Take image from camera
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setCardCreationData({
+                          ...cardCreationData,
+                          image: placeholderImage,
+                        });
+                      }}>
+                      <View
+                        style={[
+                          styles.surface,
+                          {
+                            backgroundColor: 'tomato',
+                            height: 50,
+                            justifyContent: 'center',
+                            gap: 10,
+                            alignItems: 'center',
+                          },
+                        ]}>
+                        <Icon name="close" size={20} color="white" />
+                        <Text style={{color: 'white', fontSize: 20}}>
+                          Clear Image
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
                   </View>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    handlePressCamera();
-                  }}>
-                  <View style={[styles.surface, {backgroundColor: 'tomato'}]}>
-                    <Icon name="camerao" size={30} color="white" />
-                    <Text style={{color: 'white'}}>Take image from camera</Text>
-                  </View>
-                </TouchableOpacity>
+                )}
                 <View style={{marginTop: 20}}>
-                  <Text style={styles.cardColorText}>Choose card color:</Text>
+                  <Text style={styles.cardColorText}>
+                    Choose card category and color
+                  </Text>
                 </View>
                 <View style={styles.colorsContainer}>
-                  {colors.map((color, index) => {
+                  {aacCategoriesWithColors.map((category, index) => {
                     return (
                       <View
                         key={index}
                         style={{
-                          width: '25%',
+                          width: '100%',
                           paddingVertical: 10,
                           justifyContent: 'center',
                           alignItems: 'center',
@@ -358,26 +455,57 @@ export default function EditScreen({route, navigation}: any) {
                             setColorIndex(index);
                             setCardCreationData({
                               ...cardCreationData,
-                              backgroundColor: color,
+                              backgroundColor: category.at(1)!!,
+                              category: category.at(0)!!,
                             });
+                          }}
+                          style={{
+                            width: (Dimensions.get('window').width * 6) / 8,
+                            height: 50,
+                            alignItems: 'center',
                           }}>
                           <View
-                            style={[
-                              {
-                                backgroundColor: color,
-                                width: '75%',
-                                aspectRatio: 1 / 1,
-                                borderRadius: 1000,
-                                borderWidth: 0,
-                                borderColor: 'lightgray',
-                              },
-                              colorIndex === index
-                                ? {
-                                    borderWidth: 5,
-                                    width: '100%',
-                                  }
-                                : {},
-                            ]}></View>
+                            style={{
+                              flexDirection: 'row',
+                              justifyContent: 'flex-start',
+                              alignItems: 'center',
+                              gap: 20,
+                              width: '80%',
+                            }}>
+                            <View
+                              style={[
+                                {
+                                  height: '90%',
+                                  aspectRatio: 1 / 1,
+                                  borderRadius: 1000,
+                                  backgroundColor: category[1],
+                                },
+                                colorIndex === index
+                                  ? {
+                                      borderWidth: 4,
+                                      borderColor: 'gray',
+                                      height: '100%',
+                                    }
+                                  : {},
+                              ]}></View>
+                            <View
+                              style={{
+                                height: 1,
+                                width: 10,
+                                backgroundColor: 'gray',
+                              }}></View>
+                            <View>
+                              <Text
+                                style={{
+                                  color: 'gray',
+                                  textTransform: 'uppercase',
+                                  fontStyle: 'italic',
+                                  fontWeight: 'bold',
+                                }}>
+                                {category.at(0)}
+                              </Text>
+                            </View>
+                          </View>
                         </TouchableOpacity>
                       </View>
                     );

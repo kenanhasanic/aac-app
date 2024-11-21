@@ -5,13 +5,14 @@
  * @format
  */
 
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import type {PropsWithChildren} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {MD3LightTheme as DefaultTheme} from 'react-native-paper';
 import {
+  ActivityIndicator,
   Button,
   Dimensions,
   FlatList,
@@ -38,39 +39,13 @@ import EditScreen from './screens/EditScreen';
 import CreateCard from './screens/CreateCard';
 import Icon from 'react-native-vector-icons/AntDesign';
 import {PaperProvider} from 'react-native-paper';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-// function HomeScreen({navigation}: any) {
-//   const windowWidth = Dimensions.get('window').width;
-//   const cardWidth = windowWidth / 2;
-//   return (
-//     <View
-//       style={{
-//         flex: 1,
-//         alignItems: 'center',
-//         justifyContent: 'space-between',
-//         backgroundColor: 'green',
-//       }}>
-//       <Text>Home Screen</Text>
-//       <View style={{flexDirection: 'row'}}>
-//         <FlatList
-//           data={cardsData} // Pass the cardsData array
-//           renderItem={({item}) => <Card data={item}></Card>}
-//           keyExtractor={(item, index) => index.toString()}
-//           key={4}
-//           numColumns={4} // Use index as key
-//         />
-//       </View>
-//       <Button
-//         title="Go to Details"
-//         onPress={() => navigation.navigate('DetailsScreen')}
-//       />
-//     </View>
-//   );
-// }
+import auth from '@react-native-firebase/auth';
+import {TouchableOpacity} from 'react-native';
+import LoginScreen from './screens/LoginScreen';
+import SignUpScreen from './screens/SignUpScreen';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {FirebaseAuthTypes} from '@react-native-firebase/auth';
+import SettingsScreen from './screens/SettingsScreen';
 
 const StackA = createNativeStackNavigator();
 
@@ -87,9 +62,15 @@ function StackANavigator() {
         component={EditScreen}
         options={{headerShown: true}}
       />
+      <StackA.Screen
+        name="SettingsScreen"
+        component={SettingsScreen}
+        options={{headerShown: true}}
+      />
     </StackA.Navigator>
   );
 }
+
 const StackB = createNativeStackNavigator();
 
 function StackBNavigator() {
@@ -101,6 +82,30 @@ function StackBNavigator() {
       }}>
       <StackB.Screen name="CreateCard" component={CreateCard} />
     </StackB.Navigator>
+  );
+}
+const StackC = createNativeStackNavigator();
+
+function StackCNavigator() {
+  return (
+    <StackC.Navigator
+      initialRouteName="CreateCard"
+      screenOptions={{
+        headerShown: false,
+      }}>
+      <StackC.Screen name="LoginScreen" component={LoginScreen} />
+      <StackC.Screen
+        name="SignUpScreen"
+        component={SignUpScreen}
+        options={{
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: '#1e1e2e', // Matches SignUpScreen background color
+          },
+          headerTintColor: '#ffffff', // Optional: sets the color of the header text
+        }}
+      />
+    </StackC.Navigator>
   );
 }
 
@@ -118,6 +123,58 @@ const theme = {
 };
 
 function App(): React.JSX.Element {
+  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
+
+  function onAuthStateChanged(user: any) {
+    setUser(user);
+  }
+
+  useEffect(() => {
+    const loadUserFromStorage = async () => {
+      const storedUser = await AsyncStorage.getItem('user');
+      console.log('storedUser: ', storedUser);
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    };
+    loadUserFromStorage();
+
+    const subscriber = auth().onAuthStateChanged(async user => {
+      if (user) {
+        // User signed in, store user data
+        await AsyncStorage.setItem('user', JSON.stringify(user));
+        console.log('setUser: ', user);
+        setUser(user);
+      } else {
+        // User signed out, clear stored user data
+        AsyncStorage.getItem('user')
+          .then(storedUser => {
+            console.log('deleting user: ', storedUser);
+          })
+          .then(async () => {
+            await AsyncStorage.removeItem('user');
+          });
+        setUser(null);
+      }
+    });
+
+    return subscriber; // Unsubscribe on unmount
+  }, []);
+
+  if (!user) {
+    return (
+      <NavigationContainer>
+        <Tab.Navigator>
+          <Tab.Screen
+            name="Login"
+            component={StackCNavigator}
+            options={{headerShown: false, tabBarStyle: {display: 'none'}}}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
+    );
+  }
+
   return (
     <PaperProvider theme={theme}>
       <NavigationContainer>

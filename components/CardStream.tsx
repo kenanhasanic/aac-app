@@ -3,19 +3,11 @@ import React, {useEffect, useState} from 'react';
 import {FlatList} from 'react-native';
 import Card from './Card';
 import Icon from 'react-native-vector-icons/FontAwesome5';
-
-interface Card {
-  id: number;
-  backgroundColor: string;
-  title: string;
-  text: string;
-  image: string;
-  width: number; // TODO: use this to change grid size
-}
+import CardData from '../static/cardInterface';
 
 interface CardProps {
   data: {
-    stream: Card[];
+    stream: CardData[];
     height: number;
     deleteClickedIcon: Function;
     setIconArray: Function; // TODO: use this to change grid size
@@ -23,7 +15,7 @@ interface CardProps {
 }
 
 export default function CardStream({data}: CardProps) {
-  const [stream, setStream] = useState<Card[]>([]);
+  const [stream, setStream] = useState<CardData[]>([]);
   useEffect(() => {
     setStream(data.stream);
   }, [data]);

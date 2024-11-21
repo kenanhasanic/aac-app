@@ -1,15 +1,9 @@
 import {View, Text, StyleSheet, Image} from 'react-native';
 import React, {useEffect, useState} from 'react';
+import CardData from '../static/cardInterface';
 
 interface CardProps {
-  data: {
-    id: number;
-    backgroundColor: string;
-    text: string;
-    title: string;
-    image: string;
-    width: number; // TODO: use this to change grid size
-  };
+  data: CardData;
 }
 
 const styles = StyleSheet.create({});
