@@ -11,9 +11,9 @@ import axios from 'axios';
 import Sound from 'react-native-sound';
 import RNFS from 'react-native-fs';
 import Icon from 'react-native-vector-icons/Entypo';
+import {GOOGLE_CLOUD_TTS_API_KEY} from '@env';
 
 // Path to your Google Cloud service account key
-const GOOGLE_CLOUD_TTS_API_KEY = 'AIzaSyBWgNJNbd8ZotSbPpkz4XLvhyL4QXzWdNA';
 
 interface TTSProps {
   data: {
