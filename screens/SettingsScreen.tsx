@@ -20,6 +20,8 @@ const SettingsScreen = ({route, navigation}: any) => {
 
   const [passwordModalVisible, setPasswordModalVisible] = useState(false);
 
+  const [ttsMode, setTtsMode] = useState('');
+
   useEffect(() => {
     return () => {
       DeviceEventEmitter.removeAllListeners('event. testEvent');
@@ -29,12 +31,14 @@ const SettingsScreen = ({route, navigation}: any) => {
   useEffect(() => {
     const getSettingsData = async () => {
       const storedSafeModeData = await AsyncStorage.getItem('safeModeData');
+      const storedTTSMode = await AsyncStorage.getItem('ttsMode');
       if (storedSafeModeData !== '' && storedSafeModeData !== null) {
         if (JSON.parse(storedSafeModeData!!).isSet === 'true') {
           setSafeModeData(JSON.parse(storedSafeModeData!!));
           setIsSafeModeEnabled(true);
         }
       }
+      setTtsMode(storedTTSMode!!.toString());
     };
 
     getSettingsData();
@@ -108,6 +112,11 @@ const SettingsScreen = ({route, navigation}: any) => {
     }
   };
 
+  const handleChangeTTS = async (ttsMode: string) => {
+    await AsyncStorage.setItem('ttsMode', ttsMode);
+    setTtsMode(ttsMode);
+  };
+
   return (
     <View style={styles.container}>
       <PasswordCreateModal
@@ -139,6 +148,44 @@ const SettingsScreen = ({route, navigation}: any) => {
         onPress={openChangePasswordModal}>
         <Text style={styles.buttonText}>Change Password</Text>
       </TouchableOpacity>
+
+      <View style={styles.horizontalButtonContainer}>
+        <TouchableOpacity
+          disabled={ttsMode === 'google'}
+          style={[
+            styles.halfButton,
+            ttsMode === 'google' ? {opacity: 0.5} : {},
+          ]}
+          onPress={() => {
+            handleChangeTTS('google');
+          }}>
+          <Text style={styles.buttonText}>Google TTS</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          disabled={ttsMode === 'local'}
+          style={[styles.halfButton, ttsMode === 'local' ? {opacity: 0.5} : {}]}
+          onPress={() => {
+            handleChangeTTS('local');
+          }}>
+          <Text style={styles.buttonText}>Local TTS</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.horizontalButtonContainerSet}>
+        <View>
+          {ttsMode === 'google' ? (
+            <Text style={{color: 'red'}}>Currently set</Text>
+          ) : (
+            <></>
+          )}
+        </View>
+        <View>
+          {ttsMode === 'local' ? (
+            <Text style={{color: 'red'}}>Currently set</Text>
+          ) : (
+            <></>
+          )}
+        </View>
+      </View>
 
       {/* Grid Size Buttons */}
       <View style={styles.gridSizeContainer}>
@@ -270,6 +317,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+  },
+  horizontalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  horizontalButtonContainerSet: {
+    alignSelf: 'center',
+    width: '75%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  halfButton: {
+    width: '48%',
+    padding: 15,
+    borderRadius: 8,
+    backgroundColor: '#007BFF',
+    alignItems: 'center',
   },
   modalBackground: {
     flex: 1,

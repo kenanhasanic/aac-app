@@ -74,6 +74,11 @@ export default function HomeScreen({navigation}: any) {
         // Get the stored user data
         const storedUser = await AsyncStorage.getItem('user');
         const storedSafeModeData = await AsyncStorage.getItem('safeModeData');
+        const storedTTSMode = await AsyncStorage.getItem('ttsMode');
+
+        if (!storedTTSMode) {
+          await AsyncStorage.setItem('ttsMode', 'google');
+        }
 
         // this is being set if i need it to popup for dev purpose
         // await AsyncStorage.setItem('safeModeData', '');
@@ -303,6 +308,7 @@ export default function HomeScreen({navigation}: any) {
 
   const handlePressGenerate = async () => {
     setLoading(true); // Set loading to true while awaiting the response
+    setResponse('');
     try {
       const result = await AiGeneratedPhrase(inputString);
       setResponse(result); // Update the state with the response from the AI

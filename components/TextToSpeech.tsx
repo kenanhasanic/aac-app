@@ -12,6 +12,8 @@ import Sound from 'react-native-sound';
 import RNFS from 'react-native-fs';
 import Icon from 'react-native-vector-icons/Entypo';
 import {GOOGLE_CLOUD_TTS_API_KEY} from '@env';
+import Tts from 'react-native-tts';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Path to your Google Cloud service account key
 
@@ -31,13 +33,24 @@ const TextToSpeech = ({data}: TTSProps) => {
   }, [data]);
 
   useEffect(() => {
+    const getTTSMode = async () => {
+      const storedTTSMode = await AsyncStorage.getItem('ttsMode');
+
+      if (storedTTSMode!!.toString() === 'google') {
+        handleTTSRequest();
+      } else if (storedTTSMode!!.toString() === 'local') {
+        console.log('uslo u phonetts');
+        handlePhoneTTS();
+      }
+    };
     if (
       text !== undefined &&
       text !== '' &&
       text !== null &&
       data.isAiGenerated === true
-    )
-      handleTTSRequest();
+    ) {
+      getTTSMode();
+    }
   }, [text]);
 
   const [audioPath, setAudioPath] = useState<string | null>(null);
@@ -93,13 +106,30 @@ const TextToSpeech = ({data}: TTSProps) => {
     }
   };
 
+  const handlePhoneTTS = () => {
+    Tts.setDefaultLanguage('pl-PL'); // Set the language to Bosnian
+
+    // Speak the text with proper Android options
+    Tts.speak(text);
+  };
+
+  const handlePressPlay = async () => {
+    if (data.handleGenerate === null) {
+      const storedTTSMode = await AsyncStorage.getItem('ttsMode');
+      if (storedTTSMode!!.toString() === 'google') {
+        handleTTSRequest();
+      } else if (storedTTSMode!!.toString() === 'local') {
+        handlePhoneTTS();
+      }
+    } else data.handleGenerate();
+  };
+
   return (
     <View>
       <TouchableOpacity
         disabled={data.isDisabled}
         onPress={() => {
-          if (data.handleGenerate === null) handleTTSRequest();
-          else data.handleGenerate();
+          handlePressPlay();
         }}
         style={[
           {
